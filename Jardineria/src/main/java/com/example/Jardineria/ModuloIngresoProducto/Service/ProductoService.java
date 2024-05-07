@@ -1,5 +1,6 @@
 package com.example.Jardineria.ModuloIngresoProducto.Service;
 
+import com.example.Jardineria.ModuloAuditoria.ServiceLog.AuditoriaService;
 import com.example.Jardineria.ModuloEntidades.Entity.GamaProducto;
 import com.example.Jardineria.ModuloEntidades.Entity.Producto;
 import com.example.Jardineria.ModuloEntidades.Entity.Proveedores;
@@ -23,6 +24,8 @@ public class ProductoService {
     private GamaProductoRepository gamaProductoRepository;
     @Autowired
     private ProveedoresRepository proveedoresRepository;
+    @Autowired
+    private AuditoriaService auditoriaService;
     public List<Producto> getProductos(){
         return  productoRepository.findAll();
     }
@@ -32,6 +35,7 @@ public class ProductoService {
     }
 
     public void save(ProductoDTO productoDTO){
+        try {
         Producto producto = new Producto();
         GamaProducto gamaProducto = new GamaProducto();
         Proveedores proveedores = new Proveedores();
@@ -63,8 +67,16 @@ public class ProductoService {
         producto.setCantidadEnStock(productoDTO.getCantidadEnStock());
         producto.setPrecioVenta(productoDTO.getPrecioVenta());
         producto.setPrecioProveedor(productoDTO.getPrecioProveedor());
+            productoRepository.save(producto);
+    } catch (Exception e) {
+            // Registra el evento de error utilizando el servicio de auditoría
+            auditoriaService.registrarError("Error 500 al guardar producto"+ e.getMessage());
 
-        productoRepository.save(producto);
+            // Lanza la excepción original para que pueda ser manejada por el controlador o un interceptor global
+            throw e;
+        }
+
+
     }
     public void update(ProductoDTO productoDTO){
         Producto producto = new Producto();
