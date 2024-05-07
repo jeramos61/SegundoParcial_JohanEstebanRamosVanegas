@@ -35,6 +35,7 @@ public class ProductoService {
     }
 
     public void save(ProductoDTO productoDTO){
+        int contadorErrores = 0;
         try {
         Producto producto = new Producto();
         GamaProducto gamaProducto = new GamaProducto();
@@ -68,10 +69,13 @@ public class ProductoService {
         producto.setPrecioVenta(productoDTO.getPrecioVenta());
         producto.setPrecioProveedor(productoDTO.getPrecioProveedor());
             productoRepository.save(producto);
-    } catch (Exception e) {
-            // Registra el evento de error utilizando el servicio de auditoría
-            auditoriaService.registrarError("Error 500 al guardar producto"+ e.getMessage());
 
+    } catch (Exception e) {
+            contadorErrores++;
+            if(contadorErrores >= 2) {
+                // Registra el evento de error utilizando el servicio de auditoría
+                auditoriaService.registrarError("Error 500 al guardar producto" + e.getMessage());
+            }
             // Lanza la excepción original para que pueda ser manejada por el controlador o un interceptor global
             throw e;
         }
