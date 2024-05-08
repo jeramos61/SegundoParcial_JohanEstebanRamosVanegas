@@ -11,7 +11,7 @@ import java.util.List;
 import java.util.Optional;
 
 @RestController
-@RequestMapping("/Proveedores")
+@RequestMapping("/v2/api/Proveedores")
 public class ProveedoresController {
     @Autowired
     private ProveedoresService proveedoresService;

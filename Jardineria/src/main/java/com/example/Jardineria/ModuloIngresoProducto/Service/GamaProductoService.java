@@ -1,6 +1,7 @@
 package com.example.Jardineria.ModuloIngresoProducto.Service;
 
 
+import com.example.Jardineria.ModuloAuditoria.ServiceLog.AuditoriaService;
 import com.example.Jardineria.ModuloEntidades.Entity.GamaProducto;
 import com.example.Jardineria.ModuloIngresoProducto.DTO.GamaProductoDTO;
 import com.example.Jardineria.ModuloEntidades.Repository.GamaProductoRepository;
@@ -15,7 +16,10 @@ import java.util.Optional;
 public class GamaProductoService {
     @Autowired
     GamaProductoRepository gamaProductoRepository;
+    @Autowired
+    private AuditoriaService auditoriaService;
 
+    private int contadorErrores = 0;
     public List<GamaProducto> getGamas(){
         return  gamaProductoRepository.findAll();
     }
@@ -27,12 +31,24 @@ public class GamaProductoService {
     }
 
     public void save(GamaProductoDTO gamaProductoDTO){
-    GamaProducto gamaProducto = new GamaProducto();
+    try {
+        GamaProducto gamaProducto = new GamaProducto();
         String nuevoCodigoGama= generarCodigoGama();
         gamaProducto.setCodigoGama(nuevoCodigoGama);
         gamaProducto.setGama(gamaProductoDTO.getGama());
         gamaProducto.setDescripcion(gamaProductoDTO.getDescripcion());
         gamaProductoRepository.save(gamaProducto);
+    } catch (Exception e) {
+        contadorErrores++;
+        System.out.println(contadorErrores+"\n");
+        if(contadorErrores >= 2){
+            // Registra el evento de error utilizando el servicio de auditoría
+            auditoriaService.registrarError("Error 500 al guardar producto"+ e.getMessage());
+        }
+        // Lanza la excepción original para que pueda ser manejada por el controlador o un interceptor global
+        throw e;
+    }
+
     }
     public void update(GamaProductoDTO gamaProductoDTO){
         GamaProducto gamaProducto = new GamaProducto();
@@ -51,6 +67,7 @@ public class GamaProductoService {
 
 
     public void delete(String nombre){
+        try{
         GamaProducto gamaProducto = new GamaProducto();
         List <GamaProducto> listaGamaProducto = gamaProductoRepository.findByGama(nombre);
         if (!listaGamaProducto.isEmpty()) {
@@ -61,7 +78,17 @@ public class GamaProductoService {
             throw new ProductoNotFoundException("No se encontró el producto especificado");
         }
         gamaProductoRepository.deleteById(gamaProducto.getCodigoGama());
-    }
+        } catch (Exception e) {
+            contadorErrores++;
+            System.out.println(contadorErrores+"\n");
+            if(contadorErrores >= 2){
+                // Registra el evento de error utilizando el servicio de auditoría
+                auditoriaService.registrarError("Error 500 al guardar producto"+ e.getMessage());
+            }
+            // Lanza la excepción original para que pueda ser manejada por el controlador o un interceptor global
+            throw e;
+        }
+        }
     private String generarCodigoGama() {
         String ultimoCodigo = gamaProductoRepository.obtenerUltimoCodigoGama();
         int ultimoNumero = Integer.parseInt(ultimoCodigo.substring(2));

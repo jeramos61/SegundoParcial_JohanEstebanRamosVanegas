@@ -9,7 +9,7 @@ import java.util.List;
 import java.util.Optional;
 
 @RestController
-@RequestMapping("/GamaProductos")
+@RequestMapping("/v2/api/GamaProductos")
 public class GamaProductoController {
     @Autowired
     private GamaProductoService gamaProductoService;

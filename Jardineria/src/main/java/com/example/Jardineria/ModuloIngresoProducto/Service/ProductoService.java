@@ -14,6 +14,7 @@ import com.example.Jardineria.ModuloIngresoProducto.Excepciones.ProveedoresNotFo
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import javax.swing.*;
 import java.util.List;
 import java.util.Optional;
 @Service
@@ -26,6 +27,8 @@ public class ProductoService {
     private ProveedoresRepository proveedoresRepository;
     @Autowired
     private AuditoriaService auditoriaService;
+
+    private int contadorErrores = 0;
     public List<Producto> getProductos(){
         return  productoRepository.findAll();
     }
@@ -35,7 +38,7 @@ public class ProductoService {
     }
 
     public void save(ProductoDTO productoDTO){
-        int contadorErrores = 0;
+
         try {
         Producto producto = new Producto();
         GamaProducto gamaProducto = new GamaProducto();
@@ -72,9 +75,10 @@ public class ProductoService {
 
     } catch (Exception e) {
             contadorErrores++;
-            if(contadorErrores >= 2) {
-                // Registra el evento de error utilizando el servicio de auditoría
-                auditoriaService.registrarError("Error 500 al guardar producto" + e.getMessage());
+            System.out.println(contadorErrores+"\n");
+            if(contadorErrores >= 2){
+            // Registra el evento de error utilizando el servicio de auditoría
+            auditoriaService.registrarError("Error 500 al guardar producto"+ e.getMessage());
             }
             // Lanza la excepción original para que pueda ser manejada por el controlador o un interceptor global
             throw e;
@@ -83,6 +87,7 @@ public class ProductoService {
 
     }
     public void update(ProductoDTO productoDTO){
+        try {
         Producto producto = new Producto();
         Proveedores proveedores = new Proveedores();
         GamaProducto gamaProducto = new GamaProducto();
@@ -119,6 +124,17 @@ public class ProductoService {
         producto.setPrecioVenta(productoDTO.getPrecioVenta());
         producto.setPrecioProveedor(productoDTO.getPrecioProveedor());
         productoRepository.save(producto);
+        } catch (Exception e) {
+            contadorErrores++;
+            System.out.println(contadorErrores+"\n");
+            if(contadorErrores >= 2){
+                // Registra el evento de error utilizando el servicio de auditoría
+                auditoriaService.registrarError("Error 500 al guardar producto"+ e.getMessage());
+            }
+            // Lanza la excepción original para que pueda ser manejada por el controlador o un interceptor global
+            throw e;
+        }
+
     }
     private String generarCodigoProducto() {
         String ultimoCodigoProducto = productoRepository.obtenerUltimoCodigoProducto();
